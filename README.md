@@ -28,3 +28,16 @@ Initially, all tests should fail with `NotImplementedError`s.
 To connect your implementation to the tests, complete the
 functions in [./tests/adapters.py](./tests/adapters.py).
 
+
+## down_resource
+Install modelscope, then run `down_resource.sh`:
+
+``` sh
+pip install modelscope
+```
+use modelscope to download model and datasets:
+
+``` sh
+chmod +x down_resource.sh
+./down_resource.sh
+```
