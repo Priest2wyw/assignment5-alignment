@@ -41,3 +41,11 @@ use modelscope to download model and datasets:
 chmod +x down_resource.sh
 ./down_resource.sh
 ```
+
+## run baseline
+
+``` sh
+chmod +x run_baseline.sh
+./run_baseline.sh
+```
+the result and anaysis of baseline for qwen2.5-math-1.5b is in [docs/0_math_baseline.md](docs/0_math_baseline.md)
