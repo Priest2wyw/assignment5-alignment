@@ -14,12 +14,19 @@ result is:
     rewards: 0.0
 ```
 the answer of three questions are:
+
 (1) correct with both format and answer reward 1 
+
 A: **0** 
+
 (2) format reward1 and answer reward 0 has:
+
 A: **258**
+
 (3) format reward 0 and answer reward 0:
+
 A：**1061**
+
 (4)Observing at least 10 caseswhere format reward is 0, do you think the issue is with the base model’s output, or the parser?Why?
 What about in (at least 10) cases where format reward is 1 but answer reward is 0?
 
@@ -33,5 +40,7 @@ format reward=0，我看了18个，其中5个答案是正确的，但是没有�
 format reward=1，我看了10个，其中4个答案是正确的,达到了 40% 的比例。其余的6个答案，没算对也没有按照返回格式进行回答。
 
 ## 3.summary 
+
 Q:How well does the Qwen 2.5 Math 1.5B zero-shot baseline perform on MATH?
+
 A: The Qwen 2.5 Math 1.5B zero-shot baseline performs bad on MATH. It gets a 27.78% accuracy rate of format reword, but 0.0% accuracy rate of answer reward.
