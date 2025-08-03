@@ -31,8 +31,20 @@ def run_tokenize_prompt_and_output(
             "response_mask": torch.Tensor of shape (batch_size, max(prompt_and_output_lens) - 1):
                 a mask on the response tokens in `labels`.
     """
-    raise NotImplementedError
+    input_ids, labels, response_mask = [], [], [] 
+    for prompt_str, output_str in zip(prompt_strs, output_strs): 
+        tokens = tokenizer(prompt_str+output_str, return_tensors="pt")["input_ids"]
+        input_ids.append(tokens[ :-1]) 
+        labels.append(tokens[1:])
+        response_mask.append([0]*(len(prompt_str)-1)+[1]*(len(output_str)))
 
+    return {
+        "input_ids": torch.tensor(input_ids),
+        "labels": torch.tensor(labels),
+        "response_mask": torch.tensor(response_mask),
+    }
+    
+                        
 
 def run_compute_group_normalized_rewards(
     reward_fn: Callable,
