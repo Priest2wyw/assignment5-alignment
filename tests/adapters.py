@@ -7,6 +7,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerBase
+from torch.nn.utils.rnn import pad_sequence
 
 
 def run_tokenize_prompt_and_output(
@@ -33,15 +34,23 @@ def run_tokenize_prompt_and_output(
     """
     input_ids, labels, response_mask = [], [], [] 
     for prompt_str, output_str in zip(prompt_strs, output_strs): 
-        tokens = tokenizer(prompt_str+output_str, return_tensors="pt")["input_ids"]
-        input_ids.append(tokens[ :-1]) 
-        labels.append(tokens[1:])
-        response_mask.append([0]*(len(prompt_str)-1)+[1]*(len(output_str)))
+        prompt_tokens = tokenizer(prompt_str, add_special_tokens=False).input_ids
+        output_tokens = tokenizer(output_str, add_special_tokens=False).input_ids
+        all_tokens = prompt_tokens + output_tokens
 
+        masks = [0]*(len(prompt_tokens))+[1]*(len(all_tokens)-len(prompt_tokens))
+
+        input_ids.append(torch.tensor(all_tokens[:-1]))
+        labels.append(torch.tensor(all_tokens[1:])) 
+        response_mask.append(torch.tensor(masks[1:]))
+
+
+    # get padding token
+    pad_id = tokenizer.pad_token_id
     return {
-        "input_ids": torch.tensor(input_ids),
-        "labels": torch.tensor(labels),
-        "response_mask": torch.tensor(response_mask),
+        "input_ids": pad_sequence(input_ids, batch_first=True, padding_value=pad_id),
+        "labels": pad_sequence(labels, batch_first=True, padding_value=pad_id),
+        "response_mask": pad_sequence(response_mask, batch_first=True, padding_value=False),
     }
     
                         
