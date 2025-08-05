@@ -32,27 +32,35 @@ def run_tokenize_prompt_and_output(
             "response_mask": torch.Tensor of shape (batch_size, max(prompt_and_output_lens) - 1):
                 a mask on the response tokens in `labels`.
     """
-    input_ids, labels, response_mask = [], [], [] 
+    input_ids, response_mask = [], [] 
     for prompt_str, output_str in zip(prompt_strs, output_strs): 
-        prompt_tokens = tokenizer(prompt_str, add_special_tokens=False).input_ids
-        output_tokens = tokenizer(output_str, add_special_tokens=False).input_ids
+        prompt_tokens = tokenizer(prompt_str, add_special_tokens=False)['input_ids']
+        output_tokens = tokenizer(output_str, add_special_tokens=False)['input_ids']
         all_tokens = prompt_tokens + output_tokens
 
-        masks = [0]*(len(prompt_tokens))+[1]*(len(all_tokens)-len(prompt_tokens))
+        masks = [0]*(len(prompt_tokens))+[1]*(len(output_tokens))
 
-        input_ids.append(torch.tensor(all_tokens[:-1]))
-        labels.append(torch.tensor(all_tokens[1:])) 
-        response_mask.append(torch.tensor(masks[1:]))
+        input_ids.append(torch.tensor(all_tokens))
+        response_mask.append(torch.tensor(masks))
 
 
     # get padding token
     pad_id = tokenizer.pad_token_id
-    return {
-        "input_ids": pad_sequence(input_ids, batch_first=True, padding_value=pad_id),
-        "labels": pad_sequence(labels, batch_first=True, padding_value=pad_id),
-        "response_mask": pad_sequence(response_mask, batch_first=True, padding_value=False),
-    }
+    batch_size = len(input_ids)
+    max_len = max([len(input_id) for input_id in input_ids])
     
+    input_ids_batch = torch.full((batch_size, max_len), pad_id, dtype=torch.long) 
+    response_mask_batch = torch.zeros((batch_size, max_len), dtype=torch.long)
+
+    for i, (ids, mask) in enumerate(zip(input_ids, response_mask)):
+        input_ids_batch[i, :len(ids)] = ids
+        response_mask_batch[i, :len(ids)] = mask
+
+    return {
+        "input_ids": input_ids_batch[:, :-1],
+        "labels": input_ids_batch[:, 1:],
+        "response_mask": response_mask_batch[:, 1:],
+    }
                         
 
 def run_compute_group_normalized_rewards(
