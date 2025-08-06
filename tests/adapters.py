@@ -7,8 +7,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerBase
-from torch.nn.utils.rnn import pad_sequence
-
+import  torch.nn.functional as F
 
 def run_tokenize_prompt_and_output(
     prompt_strs: list[str],
@@ -174,8 +173,24 @@ def run_get_response_log_probs(
                 we have not masked out the token indices corresponding to the prompt
                 or padding; that is done in the train loop.
     """
-    raise NotImplementedError
+    with torch.no_grad():
+        outputs = model(input_ids)
+        logits = outputs.logits
+        
+    log_probs = F.log_softmax(logits, dim=-1)
+    
+    log_probs = torch.gather(
+        log_probs, dim=2, index=labels.unsqueeze(-1)
+    ).squeeze(-1)
 
+    results = {
+        "log_probs": log_probs,
+    }
+    if return_token_entropy: 
+        token_entropy = run_compute_entropy(logits)
+        results["token_entropy"] = token_entropy
+
+    return results
 
 def run_compute_naive_policy_gradient_loss(
     raw_rewards_or_advantages: torch.Tensor,
