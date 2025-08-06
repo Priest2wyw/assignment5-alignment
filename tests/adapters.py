@@ -111,7 +111,38 @@ def run_compute_group_normalized_rewards(
 
 def run_compute_entropy(logits: torch.Tensor) -> torch.Tensor:
     """Get the entropy of the logits (i.e., entropy of the final dimension)."""
-    raise NotImplementedError
+    # (batch_size, sequence_length, vocab_size)
+    # H(p)== -sum(p * log(p))
+    # first bad idea:
+    #   logits.log_softmax(dim=-1).sum(dim=-1)
+
+    # first idea:
+    batch_size, sequence_length, _ = logits.shape
+    emtropy = torch.zeros(batch_size, sequence_length)
+    for i in range(batch_size):
+        for j in range(sequence_length):
+            current_logits = logits[i, j]
+            
+            prob = torch.softmax(current_logits, dim=0)
+            emtropy[i, j] = - torch.sum(prob*torch.log(prob))
+
+    # second idea: use logsumexp
+    """
+    H(p) = -\sum_i p_i log(p_i) = - \sum_i p_i log(\frac{exp^(x_i)}{\sum_j exp^(x_j)})
+         = -\sum_i p_i [ log(exp^xi) - log(\sum_j exp^(x_j))]
+         = -\sum_i p_i [ x_i - log(\sum_j exp^(x_j))]
+         = -\sum_i p_i x_i + \sum_i p_i log(\sum_j exp^(x_j))
+         <=(\sum_i p_i = 1)=> -\sum_i p_i x_i + log(sum_j exp^(x_j))
+         = -Ex + logsumexp(X)
+    """
+    logsumexp = torch.logsumexp(logits, dim=-1)
+    prob = torch.softmax(logits, dim=-1)
+    expect_x = torch.sum(prob * logits, dim=-1)
+
+    entropy = logsumexp - expect_x    
+    return emtropy
+            
+
 
 
 def run_get_response_log_probs(
