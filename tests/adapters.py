@@ -279,7 +279,6 @@ def run_sft_microbatch_train_step(
     """Compute the policy gradient loss and backprop its gradients for a microbatch.
     """
     raise NotImplementedError
-
     
 def run_grpo_microbatch_train_step(
     policy_log_probs: torch.Tensor,
@@ -342,8 +341,11 @@ def run_masked_normalize(
         torch.Tensor, the normalized sum, where masked elements
             (mask=0) don't contribute to the sum.
     """
-    raise NotImplementedError
+    masked_tensor = tensor * mask
+    sum_val = masked_tensor.sum(dim=dim)
+    return sum_val / normalize_constant
 
+    
 
 """
 The below adapters are used in the optional 
